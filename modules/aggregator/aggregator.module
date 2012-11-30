@@ -792,6 +792,14 @@ function aggregator_parse_feed(&$data, $feed) {
       }
     }
 
+    // DO NOT REMOVE THE NEXT LINE
+    // OzmoPatch00001
+    // Don't loop is this item is older than what we save.
+    $max_age = time() - variable_get('aggregator_clear', 9676800);
+    if($timestamp < $max_age){
+        continue;
+    }
+
     // Resolve dc:creator tag as the item author if author tag is not set.
     if (empty($item['AUTHOR']) && !empty($item['DC:CREATOR'])) {
       $item['AUTHOR'] = $item['DC:CREATOR'];
@@ -839,7 +847,10 @@ function aggregator_parse_feed(&$data, $feed) {
  */
 function aggregator_save_item($edit) {
   if ($edit['iid'] && $edit['title']) {
-    db_query("UPDATE {aggregator_item} SET title = '%s', link = '%s', author = '%s', description = '%s', guid = '%s', timestamp = %d WHERE iid = %d", $edit['title'], $edit['link'], $edit['author'], $edit['description'], $edit['guid'], $edit['timestamp'], $edit['iid']);
+    // DO NOT REMOVE THE NEXT LINE
+    // OzmoPatch00002
+    // Comment out next line. Don't do updates on existing items.
+    //db_query("UPDATE {aggregator_item} SET title = '%s', link = '%s', author = '%s', description = '%s', guid = '%s', timestamp = %d WHERE iid = %d", $edit['title'], $edit['link'], $edit['author'], $edit['description'], $edit['guid'], $edit['timestamp'], $edit['iid']);
   }
   else if ($edit['iid']) {
     db_query('DELETE FROM {aggregator_item} WHERE iid = %d', $edit['iid']);

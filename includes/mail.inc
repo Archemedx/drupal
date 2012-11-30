@@ -176,20 +176,46 @@ function drupal_mail_send($message) {
     return drupal_mail_wrapper($message);
   }
   else {
-    $mimeheaders = array();
-    foreach ($message['headers'] as $name => $value) {
-      $mimeheaders[] = $name .': '. mime_header_encode($value);
-    }
-    return mail(
-      $message['to'],
-      mime_header_encode($message['subject']),
-      // Note: e-mail uses CRLF for line-endings, but PHP's API requires LF.
-      // They will appear correctly in the actual e-mail that is sent.
-      str_replace("\r", '', $message['body']),
-      // For headers, PHP's API suggests that we use CRLF normally,
-      // but some MTAs incorrecly replace LF with CRLF. See #234403.
-      join("\n", $mimeheaders)
-    );
+      // DO NOT REMOVE THE NEXT LINE
+      // OzmoPatch00003
+      // We patch mail to include the 5th command line optio if the header var 'Raturn-Path'
+      // is set. This is sendmail specific but allows the client to determine the path.
+      $rpath = FALSE;
+      $mimeheaders = array();
+      foreach ($message['headers'] as $name => $value) {
+          $mimeheaders[] = $name .': '. mime_header_encode($value);
+          if($name == 'Return-Path'){
+              $rpath = $value;
+          }
+      }
+      if($rpath){
+          watchdog('mail', "Return-Path Set Manually: $rpath");
+          return mail(
+              $message['to'],
+              mime_header_encode($message['subject']),
+              // Note: e-mail uses CRLF for line-endings, but PHP's API requires LF.
+              // They will appear correctly in the actual e-mail that is sent.
+              str_replace("\r", '', $message['body']),
+              // For headers, PHP's API suggests that we use CRLF normally,
+              // but some MTAs incorrecly replace LF with CRLF. See #234403.
+              join("\n", $mimeheaders),
+              // Set Return-Path via -f sendmail option. This is sendmail specific but only applies if the header is set.
+              '-f'.$rpath
+          );
+      }
+      // Pre-patch looks like this
+      else {
+          return mail(
+              $message['to'],
+              mime_header_encode($message['subject']),
+              // Note: e-mail uses CRLF for line-endings, but PHP's API requires LF.
+              // They will appear correctly in the actual e-mail that is sent.
+              str_replace("\r", '', $message['body']),
+              // For headers, PHP's API suggests that we use CRLF normally,
+              // but some MTAs incorrecly replace LF with CRLF. See #234403.
+              join("\n", $mimeheaders)
+          );
+      }
   }
 }
 

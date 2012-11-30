@@ -1,3 +1,4 @@
+// $Id: tabledrag.js,v 1.13.2.5 2009/06/18 12:24:24 goba Exp $
 
 /**
  * Drag and drop table rows with field manipulation.
@@ -1014,7 +1015,7 @@ Drupal.tableDrag.prototype.row.prototype.findSiblings = function(rowSettings) {
   var siblings = new Array();
   var directions = new Array('prev', 'next');
   var rowIndentation = this.indents;
-  for (var d = 0; d < directions.length; d++) {
+  for (var d in directions) {
     var checkRow = $(this.element)[directions[d]]();
     while (checkRow.length) {
       // Check that the sibling contains a similar target field.
